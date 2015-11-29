@@ -1,3 +1,16 @@
+This is a clone of Gigedit from linuxsampler.org
+svn repo found here: https://svn.linuxsampler.org/svn/gigedit/
+
+I've implemented a simple way for transposing an instrument in semi-tone steps via mouse clicks.
+In order to transpose the instrument, just click on the empty area outside of the instrument region,
+and the regions will shift in that direction by one semi-tone.
+
+This implementation is sloppy and the current gigedit developers probably have a better idea to
+accomplish full-region transposing, but it does what it claims to do.
+
+T. Marplatt
+
+
 Gigedit
 =======
 
