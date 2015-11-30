@@ -48,6 +48,8 @@ public:
     void update(gig::Instrument* instrument);
     gig::Region* first();
     gig::Region* next();
+    // tc: last region
+    gig::Region* last();
     bool operator() (gig::Region* x, gig::Region* y) const {
         return x->KeyRange.low < y->KeyRange.low;
     }
@@ -123,6 +125,9 @@ protected:
     void update_after_resize();
     void update_after_move(int pos);
     void invalidate_key(int key);
+    
+    // tc: 
+    void shift_all_regions(int shift);
 
     // returns the leftmost pixel of a key
     int key_to_x(double k, int w) const {

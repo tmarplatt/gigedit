@@ -57,7 +57,11 @@ gig::Region* SortedRegions::next() {
     ++region_iterator;
     return region_iterator == regions.end() ? 0 : *region_iterator;
 }
-
+// tc: we're going to need to find the last region
+gig::Region* SortedRegions::last() {
+    region_iterator = regions.end() - 1;
+    return regions.begin() == regions.end() ? 0 : *region_iterator;
+}
 
 
 RegionChooser::RegionChooser() :
@@ -612,7 +616,22 @@ bool RegionChooser::on_button_press_event(GdkEventButton* event)
 #endif
                 move.active = true;
                 move.offset = event->x - key_to_x(region->KeyRange.low, w);
-            }
+            } else {
+	      // tc: clicking but not on a region. let's move all regions!
+	      // shift all regions towards the direction of the mouse cursor
+	      gig::Region* r = regions.first();
+	      if (r) {
+		if (event->x < key_to_x(r->KeyRange.low, w)) {
+		  shift_all_regions(-1);
+		} else {
+		  gig::Region* r = regions.last();
+		  if (r && event->x > key_to_x(r->KeyRange.high, w)) {
+		    shift_all_regions(1);
+		  }
+		}
+	      }
+		
+	    }
         }
     }
     return true;
@@ -625,6 +644,26 @@ gig::Region* RegionChooser::get_region(int key)
         if (key <= r->KeyRange.high) return r;
     }
     return 0;
+}
+// tc: make it possible to move regions a given number of keys at a time
+void RegionChooser::shift_all_regions(int shift)
+{
+    instrument_struct_to_be_changed_signal.emit(instrument);
+    for (gig::Region* r = regions.first() ; r ; r = regions.next()) {
+      r->SetKeyRange(r->KeyRange.low + shift, r->KeyRange.high + shift);
+      if (Settings::singleton()->moveRootNoteWithRegionMoved) {
+	  for (int i = 0; i < 256; ++i) {
+	      gig::DimensionRegion* dimrgn = r->pDimensionRegions[i];
+	      if (!dimrgn || !dimrgn->pSample || !dimrgn->PitchTrack) continue;
+	      dimrgn->UnityNote += shift;
+	  }
+      }
+    }
+    regions.update(instrument);
+    instrument_struct_changed_signal.emit(instrument);
+
+    queue_draw();
+    instrument_changed();
 }
 
 void RegionChooser::set_region(gig::Region* region) {
